@@ -3,7 +3,7 @@
     <h1 class="text-h4 q-mb-md">Top 10 Cryptocurrencies (by market cap)</h1>
 
     <q-list bordered padding class="rounded-borders bg-grey-1">
-      <q-item v-for="coin in coins" :key="coin.id" class="q-my-xs">
+      <q-item v-for="coin in coins" :key="coin.id" clickable @click="$router.push(`/coin/${coin.id}`)" class="q-my-xs">
         <q-item-section avatar>
           <q-avatar>
             <img :src="coin.image" :alt="coin.name" />
