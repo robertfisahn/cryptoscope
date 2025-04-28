@@ -33,6 +33,14 @@
             <q-item-label>Home</q-item-label>
           </q-item-section>
         </q-item>
+        <q-item clickable v-ripple @click="$router.push('/watchlist')">
+          <q-item-section avatar>
+            <q-icon name="star" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>Watchlist</q-item-label>
+          </q-item-section>
+        </q-item>
       </q-list>
     </q-drawer>
 
