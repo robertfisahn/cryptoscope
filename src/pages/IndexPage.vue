@@ -14,6 +14,13 @@
           <q-item-label>
             {{ coin.name }} ({{ coin.symbol.toUpperCase() }})
           </q-item-label>
+          <q-btn
+            flat
+            :color="watchlistStore.watchlist.includes(coin.id) ? 'negative' : 'primary'"
+            :label="watchlistStore.watchlist.includes(coin.id) ? 'Remove from Watchlist' : 'Add to Watchlist'"
+            @click="watchlistStore.watchlist.includes(coin.id) ? watchlistStore.removeFromWatchlist(coin.id) : watchlistStore.addToWatchlist(coin.id)"
+          />
+
           <q-item-label caption>
             Price: ${{ coin.current_price.toLocaleString() }} | 24h Change:
             <span :class="coin.price_change_percentage_24h >= 0 ? 'text-positive' : 'text-negative'">
@@ -33,6 +40,9 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted } from 'vue';
 import { useHomeStore } from 'src/stores/homeStore';
+import { useWatchlistStore } from 'src/stores/watchlistStore';
+
+const watchlistStore = useWatchlistStore();
 
 const homeStore = useHomeStore();
 
