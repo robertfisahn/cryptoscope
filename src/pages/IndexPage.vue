@@ -1,7 +1,7 @@
 <template>
   <q-page class="q-pa-md">
     <h1 class="text-h4 q-mb-md">Top 10 Cryptocurrencies (by market cap)</h1>
-
+    <SearchBar />
     <q-list bordered padding class="rounded-borders bg-grey-1">
       <q-item v-for="coin in homeStore.coins" :key="coin.id" clickable @click="$router.push(`/coin/${coin.id}`)" class="q-my-xs">
         <q-item-section avatar>
@@ -41,9 +41,12 @@
 import { onMounted, onUnmounted } from 'vue';
 import { useHomeStore } from 'src/stores/homeStore';
 import { useWatchlistStore } from 'src/stores/watchlistStore';
+import { useSearchStore } from 'src/stores/searchStore';
+import SearchBar from 'src/components/SearchBar.vue';
+
 
 const watchlistStore = useWatchlistStore();
-
+const searchStore = useSearchStore();
 const homeStore = useHomeStore();
 
 let intervalId: number | undefined;
@@ -51,6 +54,7 @@ let intervalId: number | undefined;
 onMounted(() => {
   console.log(`[HomePage] Fetching top coins at ${new Date().toLocaleTimeString()}`);
   void homeStore.fetchTopCoins();
+  void searchStore.fetchCoinsList();
   intervalId = window.setInterval(() => {
     console.log(`[HomePage] Interval fetch at ${new Date().toLocaleTimeString()}`);
     void homeStore.fetchTopCoins();
