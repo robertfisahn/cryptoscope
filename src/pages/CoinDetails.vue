@@ -1,6 +1,6 @@
 <template>
   <q-page class="q-pa-md">
-    <div v-if="loading">
+    <div v-if="loadingCoin">
       <q-spinner color="primary" size="2em" class="q-mb-md" />
       Loading...
     </div>
@@ -15,9 +15,23 @@
           {{ coin.market_data.price_change_percentage_24h.toFixed(2) }}%
         </span>
       </p>
-
       <div class="q-mt-md">
-        <LineChart v-if="chartData" :chart-data="chartData" />
+        <q-btn-group push>
+          <q-btn
+            v-for="(label, value) in timeRanges"
+            :key="value"
+            :label="label"
+            push
+            :outline="range !== value"
+            @click="range = value"
+          />
+
+        </q-btn-group>
+
+        <div v-if="loadingChart" class="q-mt-md">
+          <q-spinner size="2em" color="primary" />
+        </div>
+        <LineChart v-else-if="chartData" :chart-data="chartData" class="q-mt-md" />
       </div>
     </div>
 
@@ -28,79 +42,34 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
-import axios from 'axios'
-import type { CoinDetails } from 'src/models/CoinDetails'
-import {
-  Chart as ChartJS,
-  Title,
-  Tooltip,
-  Legend,
-  LineElement,
-  PointElement,
-  CategoryScale,
-  LinearScale
-} from 'chart.js'
-import type { ChartData } from 'chart.js'
-import LineChart from 'src/components/LineChart.vue'
+import { ref, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
+import axios from 'axios';
+import LineChart from 'src/components/LineChart.vue';
+import { useCoinChart } from 'src/composables/useCoinChart';
+import type { CoinDetails } from 'src/models/CoinDetails';
+type TimeRange = '1' | '7' | '30';
+const timeRanges: Record<TimeRange, string> = {
+  '1': '24h',
+  '7': '7d',
+  '30': '1m'
+};
+const route = useRoute();
+const id = route.params.id as string;
 
+const coin = ref<CoinDetails | null>(null);
+const loadingCoin = ref(true);
 
-interface PricePoint {
-  x: Date;
-  y: number;
-}
+const { chartData, loading: loadingChart, range } = useCoinChart(id);
 
-ChartJS.register(Title, Tooltip, Legend, LineElement, PointElement, CategoryScale, LinearScale)
-
-const route = useRoute()
-const id = route.params.id as string
-
-const coin = ref<CoinDetails | null>(null)
-const loading = ref(true)
-const chartData = ref<ChartData<'line'> | null>(null);
-
-const fetchCoinDetails = async () => {
+onMounted(async () => {
   try {
-    const res = await axios.get(`https://api.coingecko.com/api/v3/coins/${id}`)
-    coin.value = res.data
+    const res = await axios.get(`https://api.coingecko.com/api/v3/coins/${id}`);
+    coin.value = res.data;
   } catch (err) {
-    console.error('Error fetching coin details:', err)
-  }
-}
-
-const fetchCoinMarketChart = async () => {
-  try {
-    const res = await axios.get(`https://api.coingecko.com/api/v3/coins/${id}/market_chart`, {
-      params: {
-        vs_currency: 'usd',
-        days: 7,
-      }
-    })
-
-    const prices = res.data.prices.map((item: [number, number]): PricePoint => ({
-      x: new Date(item[0]),
-      y: item[1]
-    }))
-
-    chartData.value = {
-      labels: prices.map((p: PricePoint) => p.x.toLocaleDateString()),
-      datasets: [{
-        label: 'Price (USD)',
-        data: prices.map((p: PricePoint) => p.y),
-        fill: false,
-        borderColor: 'blue'
-      }]
-    }
-  } catch (err) {
-    console.error('Error fetching market chart data:', err)
+    console.error('Error loading coin:', err);
   } finally {
-    loading.value = false
+    loadingCoin.value = false;
   }
-}
-
-onMounted(() => {
-  void fetchCoinDetails()
-  void fetchCoinMarketChart()
-})
+});
 </script>
