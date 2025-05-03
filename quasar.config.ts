@@ -13,7 +13,8 @@ export default defineConfig((/* ctx */) => {
     // https://v2.quasar.dev/quasar-cli-vite/boot-files
     boot: [
       'axios',
-      'pinia'
+      'pinia',
+      'initCrypto'
     ],
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#css

@@ -46,14 +46,14 @@
   
   <script setup lang="ts">
   import { computed } from 'vue';
-  import { useHomeStore } from 'src/stores/homeStore';
+  import { useCryptoStore } from 'src/stores/cryptoStore';
   import { useWatchlistStore } from 'src/stores/watchlistStore';
   
-  const homeStore = useHomeStore();
+  const cryptoStore = useCryptoStore();
   const watchlistStore = useWatchlistStore();
   
   const filteredCoins = computed(() =>
-    homeStore.coins.filter(coin => watchlistStore.watchlist.includes(coin.id))
+    cryptoStore.coins.filter(coin => watchlistStore.watchlist.includes(coin.id))
   );
   </script>
   
