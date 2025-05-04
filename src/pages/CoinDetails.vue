@@ -10,11 +10,12 @@
       <img :src="coin.image.large" :alt="coin.name" width="64" class="q-mb-md" />
       <p>Current price (USD): ${{ coin.market_data.current_price.usd.toLocaleString() }}</p>
       <p>Market cap: ${{ coin.market_data.market_cap.usd.toLocaleString() }}</p>
-      <p>24h Change: 
+      <p>24h Change:
         <span :class="coin.market_data.price_change_percentage_24h >= 0 ? 'text-positive' : 'text-negative'">
           {{ coin.market_data.price_change_percentage_24h.toFixed(2) }}%
         </span>
       </p>
+
       <div class="q-mt-md">
         <q-btn-group push>
           <q-btn
@@ -25,7 +26,6 @@
             :outline="range !== value"
             @click="range = value"
           />
-
         </q-btn-group>
 
         <div v-if="loadingChart" class="q-mt-md">
@@ -42,34 +42,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import axios from 'axios';
 import LineChart from 'src/components/LineChart.vue';
 import { useCoinChart } from 'src/composables/useCoinChart';
-import type { CoinDetails } from 'src/models/CoinDetails';
-type TimeRange = '1' | '7' | '30';
+import { useCoinDetails } from 'src/composables/useCoinDetails';
+import type { TimeRange } from 'src/composables/useCoinChart';
+
+const route = useRoute();
+const id = route.params.id as string;
+
+const { coin, loading: loadingCoin } = useCoinDetails(id);
+const { chartData, loading: loadingChart, range } = useCoinChart(id);
+
 const timeRanges: Record<TimeRange, string> = {
   '1': '24h',
   '7': '7d',
   '30': '1m'
 };
-const route = useRoute();
-const id = route.params.id as string;
-
-const coin = ref<CoinDetails | null>(null);
-const loadingCoin = ref(true);
-
-const { chartData, loading: loadingChart, range } = useCoinChart(id);
-
-onMounted(async () => {
-  try {
-    const res = await axios.get(`https://api.coingecko.com/api/v3/coins/${id}`);
-    coin.value = res.data;
-  } catch (err) {
-    console.error('Error loading coin:', err);
-  } finally {
-    loadingCoin.value = false;
-  }
-});
 </script>
+
