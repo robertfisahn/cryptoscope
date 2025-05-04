@@ -16,8 +16,8 @@ export const useCryptoStore = defineStore('crypto', {
   actions: {
     async fetchCoins(force = false) {
       if (this.coins.length > 0 && !force) return
-
-      this.loading = true
+      
+     this.loading = true
       this.error = null
 
       try {
@@ -46,7 +46,7 @@ export const useCryptoStore = defineStore('crypto', {
       } finally {
         this.loading = false
       }
-    },
+    }, 
 
     loadFromCache() {
       const cached = localStorage.getItem(CACHE_KEY)
