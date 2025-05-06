@@ -6,5 +6,10 @@ const api = axios.create({
 
 export const coinApi = {
   getCoinDetails: (id: string) =>
-    api.get(`/coins/${id}`)
+    api.get(`/coins/${id}`),
+  
+  getCoinMarketChart: (id: string, days: string) =>
+    api.get(`/coins/${id}/market_chart`, {
+      params: { vs_currency: 'usd', days }
+    })
 };

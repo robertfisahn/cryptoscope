@@ -1,8 +1,8 @@
 import { ref, watch } from 'vue';
-import axios from 'axios';
+import { useCoinChartStore } from 'src/stores/coinChartStore';
 import type { ChartData } from 'chart.js';
-
-export type TimeRange = '1' | '7' | '30'; // days
+import type { TimeRange } from 'src/models/TimeRange';
+import { DEFAULT_TIME_RANGE } from 'src/models/TimeRange';
 
 interface PricePoint {
   x: Date;
@@ -10,19 +10,19 @@ interface PricePoint {
 }
 
 export function useCoinChart(coinId: string) {
+  const chartStore = useCoinChartStore();
   const chartData = ref<ChartData<'line'> | null>(null);
   const loading = ref(false);
-  const range = ref<TimeRange>('7');
+  const range = ref<TimeRange>(DEFAULT_TIME_RANGE);
 
   const fetchChart = async () => {
     if (!coinId) return;
     loading.value = true;
-    try {
-      const res = await axios.get(`https://api.coingecko.com/api/v3/coins/${coinId}/market_chart`, {
-        params: { vs_currency: 'usd', days: range.value }
-      });
 
-      const prices = res.data.prices.map((item: [number, number]): PricePoint => ({
+    try {
+      const rawData = await chartStore.fetchCoinChart(coinId, range.value);
+      
+      const prices = rawData.prices.map((item: [number, number]): PricePoint => ({
         x: new Date(item[0]),
         y: item[1]
       }));
