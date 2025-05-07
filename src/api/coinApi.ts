@@ -11,5 +11,16 @@ export const coinApi = {
   getCoinMarketChart: (id: string, days: string) =>
     api.get(`/coins/${id}/market_chart`, {
       params: { vs_currency: 'usd', days }
+    }),
+
+  getCoins: () =>
+    api.get('/coins/markets', {
+      params: {
+        vs_currency: 'usd',
+        order: 'market_cap_desc',
+        per_page: 10,
+        page: 1,
+        sparkline: false
+      }
     })
 };

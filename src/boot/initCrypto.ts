@@ -1,8 +1,8 @@
 import { boot } from 'quasar/wrappers'
-import { useCryptoStore } from 'stores/cryptoStore'
+import { useCoinListStore } from 'src/stores/coinListStore'
 
 export default boot(async () => {
-  const store = useCryptoStore()
+  const store = useCoinListStore()
   store.loadFromCache()
   await store.fetchCoins()
   store.startAutoRefresh(20000)

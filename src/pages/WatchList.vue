@@ -46,10 +46,10 @@
   
   <script setup lang="ts">
   import { computed } from 'vue';
-  import { useCryptoStore } from 'src/stores/cryptoStore';
+  import { useCoinListStore } from 'src/stores/coinListStore';
   import { useWatchlistStore } from 'src/stores/watchlistStore';
   
-  const cryptoStore = useCryptoStore();
+  const cryptoStore = useCoinListStore();
   const watchlistStore = useWatchlistStore();
   
   const filteredCoins = computed(() =>

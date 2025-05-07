@@ -3,7 +3,7 @@
     <h1 class="text-h4 q-mb-md">Top 10 Cryptocurrencies (by market cap)</h1>
     <SearchBar />
     <q-list bordered padding class="rounded-borders bg-grey-1">
-      <q-item v-for="coin in cryptoStore.coins" :key="coin.id" clickable @click="$router.push(`/coin/${coin.id}`)">
+      <q-item v-for="coin in coinListStore.coins" :key="coin.id" clickable @click="$router.push(`/coin/${coin.id}`)">
         <q-item-section avatar>
           <q-avatar>
             <img :src="coin.image" :alt="coin.name" />
@@ -32,14 +32,14 @@
     </q-list>
 
     <div class="q-mt-md text-caption text-grey">
-      <span v-if="cryptoStore.lastUpdated">Last updated: {{ cryptoStore.lastUpdated }}</span>
+      <span v-if="coinListStore.lastUpdated">Last updated: {{ coinListStore.lastUpdated }}</span>
     </div>
   </q-page>
 </template>
 
 <script setup lang="ts">
 import { onMounted } from 'vue';
-import { useCryptoStore } from 'src/stores/cryptoStore';
+import { useCoinListStore } from 'src/stores/coinListStore';
 import { useWatchlistStore } from 'src/stores/watchlistStore';
 import { useSearchStore } from 'src/stores/searchStore';
 import SearchBar from 'src/components/SearchBar.vue';
@@ -47,7 +47,7 @@ import SearchBar from 'src/components/SearchBar.vue';
 
 const watchlistStore = useWatchlistStore();
 const searchStore = useSearchStore();
-const cryptoStore = useCryptoStore();
+const coinListStore = useCoinListStore();
 
 onMounted(() => {
   void searchStore.fetchCoinsList();
