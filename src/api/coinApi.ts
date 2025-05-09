@@ -22,5 +22,9 @@ export const coinApi = {
         page: 1,
         sparkline: false
       }
-    })
+    }),
+
+  getSearchList: () =>
+    api.get('/coins/list')
+
 };

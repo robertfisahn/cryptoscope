@@ -44,7 +44,7 @@
       coin =>
         coin.name.toLowerCase().includes(q) ||
         coin.symbol.toLowerCase().includes(q)
-    ).slice(0, 10); // max 10 wyników
+    ).slice(0, 10);
   });
   
   function onSearch() {
