@@ -38,19 +38,11 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue';
 import { useCoinListStore } from 'src/stores/coinListStore';
 import { useWatchlistStore } from 'src/stores/watchlistStore';
-import { useSearchStore } from 'src/stores/searchStore';
 import SearchBar from 'src/components/SearchBar.vue';
 
-
 const watchlistStore = useWatchlistStore();
-const searchStore = useSearchStore();
 const coinListStore = useCoinListStore();
-
-onMounted(() => {
-  void searchStore.fetchCoinsList();
-});
 
 </script>
