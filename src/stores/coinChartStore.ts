@@ -3,19 +3,17 @@ import { coinApi } from 'src/api/coinApi';
 import type { TimeRange } from 'src/models/TimeRange';
 import { DEFAULT_TIME_RANGE } from 'src/models/TimeRange';
 import type { MarketChartData } from 'src/models/MarketChartData';
+import { reactive } from 'vue';
 
-export const useCoinChartStore = defineStore('coinChart', {
-  state: () => ({
-    charts: {} as Record<string, { data: MarketChartData; lastUpdated: number }>
-  }),
+export const useCoinChartStore = defineStore('coinChart', () => {
+    const charts = reactive<Record<string, { data: MarketChartData; lastUpdated: number }>>({});
 
-  actions: {
-    async fetchCoinChart(id: string, days: TimeRange = DEFAULT_TIME_RANGE) {
+    async function fetchCoinChart(id: string, days: TimeRange = DEFAULT_TIME_RANGE) {
       const now = Date.now();
       const key = `${id}_${days}`;
-      const cached = this.charts[key];
+      const cached = charts[key];
 
-      if (cached && now - cached.lastUpdated < 5 * 60 * 1000) {
+      if (cached && loadFromCache(cached.lastUpdated)) {
         console.log(`[CoinChartStore] Using cached chart for ${id} (${days}d)`);
         return cached.data;
       }
@@ -23,12 +21,18 @@ export const useCoinChartStore = defineStore('coinChart', {
       console.log(`[CoinChartStore] Fetching new chart for ${id} (${days}d)`);
       const res = await coinApi.getCoinMarketChart(id, days);
 
-      this.charts[key] = {
+      charts[key] = {
         data: res.data,
         lastUpdated: now
       };
-
       return res.data;
     }
+
+    function loadFromCache(lastUpdated: number): boolean {
+      const now = Date.now();
+      return now - lastUpdated < 5 * 60 * 1000;
+    }
+
+    return { charts, fetchCoinChart };
   }
-});
+);

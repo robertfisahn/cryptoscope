@@ -1,55 +1,59 @@
 import { defineStore } from 'pinia';
 import { coinApi } from 'src/api/coinApi';
 import type { SearchCoin } from 'src/models/SearchCoin';
+import { reactive, ref } from 'vue';
 
 const CACHE_KEY = 'search_coins_cache';
 
-export const useSearchStore = defineStore('search', {
-  state: () => ({
-    coins: [] as SearchCoin[],
-    loading: false,
-    lastFetched: null as number | null,
-    refreshInterval: null as number | null
-  }),
+export const useSearchStore = defineStore('search', () => {
+  const coins = reactive <SearchCoin[]>([])
+  const loading = ref(false)
+  const lastUpdated = ref<number | null>(null)
+  const refreshInterval = ref<number | null>(null)
 
-  actions: {
-    async fetchCoinsList(force = false) {
-      if (this.coins.length > 0 && !force) {
-        const cached = localStorage.getItem(CACHE_KEY);
-          if (cached) {
-          const { coins, lastFetched } = JSON.parse(cached);
-          this.coins = coins;
-          this.lastFetched = lastFetched;
-          console.log('[SearchStore] Loaded coins from cache.');
-          return;
-        }
+  async function fetchSearchCoins(force = false) {
+      if (loadFromCache() && !force){
+        console.log('[SearchStore] Loaded coins from cache.') 
+        return
       }
-
-      this.loading = true;
+      loading.value = true;
       try {
         const res = await coinApi.getSearchList();
-        this.coins = res.data;
-        this.lastFetched = Date.now();
+        coins.length = 0
+        coins.push(...res.data)
+        lastUpdated.value = Date.now();
 
         localStorage.setItem(CACHE_KEY, JSON.stringify({
-          coins: this.coins,
-          lastFetched: this.lastFetched
+          coins: coins,
+          lastUpdated: lastUpdated.value
         }));
 
-        console.log('[SearchStore] Fetched coins from API.');
+        console.log('[SearchStore] Fetching coins from API...');
       } catch (err) {
         console.error('Error fetching coins list:', err);
       } finally {
-        this.loading = false;
+        loading.value = false;
       }
-    },
+    }
 
-    startAutoRefresh(intervalMs: number) {
-      if (this.refreshInterval) return;
-      this.refreshInterval = window.setInterval(() => {
-        void this.fetchCoinsList(true);
+    function loadFromCache(): boolean {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (!cached) return false;
+    
+      const { coins: cachedCoins, lastUpdated: cachedLastUpdated } = JSON.parse(cached);
+      coins.length = 0;
+      coins.push(...cachedCoins);
+      lastUpdated.value = cachedLastUpdated;
+      return true;
+    }
+
+    function startAutoRefresh(intervalMs: number) {
+      if (refreshInterval.value) return;
+      refreshInterval.value = window.setInterval(() => {
+        void fetchSearchCoins(true);
       }, intervalMs);
-      console.log(`[SearchStore] Auto refresh started (interval: ${intervalMs} ms)`);
-    },
+      console.log(`[SearchStore] Auto refresh started)`);
+    }
+    return { coins, loading, lastUpdated, refreshInterval, fetchSearchCoins, startAutoRefresh}
   }
-});
+);

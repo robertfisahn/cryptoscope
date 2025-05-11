@@ -1,37 +1,36 @@
 import { defineStore } from 'pinia';
 import { coinApi } from 'src/api/coinApi';
 import type { CoinDetails } from 'src/models/CoinDetails';
+import { reactive } from 'vue';
 
-export const useCoinDetailsStore = defineStore('coinDetails', {
-  state: () => ({
-    coinDetails: {} as Record<string, { data: CoinDetails; lastUpdated: number; lastAccessed: number }>
-  }),
+export const useCoinDetailsStore = defineStore('coinDetails', () => {
+    const coinDetails = reactive<Record<string, { data: CoinDetails; lastUpdated: number; lastAccessed: number }>> ({});
 
-  actions: {
-    async fetchCoinDetails(id: string) {
+    async function fetchCoinDetails(id: string) {
       const now = Date.now();
-      const cached = this.coinDetails[id];
+      const cached = coinDetails[id];
 
-      if (cached) {
+      if (cached && loadFromCache(cached.lastUpdated)) {
         cached.lastAccessed = now;
-        if (now - cached.lastUpdated < 2 * 60 * 1000) {
-          console.log(`[CoinDetailsStore] Using cached details for ${id}`);
-          return cached.data;
-        }
-        console.log(`[CoinDetailsStore] Cache expired for ${id}, fetching new data`);
-      } else {
-        console.log(`[CoinDetailsStore] No cache for ${id}, fetching from API`);
+        console.log(`[CoinDetailsStore] Using cached details for ${id}`);
+        return cached.data;
       }
-
       const res = await coinApi.getCoinDetails(id);
       
-      console.log('[CoinDetailsStore] API response:', res.data);
-      this.coinDetails[id] = {
+      console.log('[CoinDetailsStore] Fetching new data from API...');
+
+      coinDetails[id] = {
         data: res.data,
         lastUpdated: now,
         lastAccessed: now
       };
       return res.data;
     }
+
+    function loadFromCache(lastUpdated: number): boolean {
+      return Date.now() - lastUpdated < 2 * 60 * 1000;
+    }
+
+    return { coinDetails, fetchCoinDetails }
   }
-});
+);
