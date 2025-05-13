@@ -1,20 +1,17 @@
-import axios from 'axios';
-
-const api = axios.create({
-  baseURL: 'https://api.coingecko.com/api/v3'
-});
+import { api } from 'boot/axios';
+import { enqueueRequest } from 'src/utils/queue';
 
 export const coinApi = {
   getCoinDetails: (id: string) =>
-    api.get(`/coins/${id}`),
-  
+    enqueueRequest(() => api.get(`/coins/${id}`), 'CoinDetailsStore'),
+
   getCoinMarketChart: (id: string, days: string) =>
-    api.get(`/coins/${id}/market_chart`, {
+    enqueueRequest(() => api.get(`/coins/${id}/market_chart`, {
       params: { vs_currency: 'usd', days }
-    }),
+    }), 'CoinChartStore'),
 
   getCoins: () =>
-    api.get('/coins/markets', {
+    enqueueRequest(() => api.get('/coins/markets', {
       params: {
         vs_currency: 'usd',
         order: 'market_cap_desc',
@@ -22,9 +19,8 @@ export const coinApi = {
         page: 1,
         sparkline: false
       }
-    }),
+    }), 'CoinListStore'),
 
   getSearchList: () =>
-    api.get('/coins/list')
-
+    enqueueRequest(() => api.get('/coins/list'), 'SearchStore')
 };
