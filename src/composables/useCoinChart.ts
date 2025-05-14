@@ -3,6 +3,7 @@ import { useCoinChartStore } from 'src/stores/coinChartStore';
 import type { ChartData } from 'chart.js';
 import type { TimeRange } from 'src/models/TimeRange';
 import { DEFAULT_TIME_RANGE } from 'src/models/TimeRange';
+import { logger } from 'src/utils/logger';
 
 interface PricePoint {
   x: Date;
@@ -17,7 +18,12 @@ export function useCoinChart(coinId: string) {
 
   function loadCachedChart() {
     const cached = chartStore.getCachedChart(coinId, range.value);
-    if (!cached) return;
+    if (!cached) {
+      logger.debug(`[useCoinChart] No cached chart for ${coinId} (${range.value}d)`);
+      return;
+    }
+
+    logger.debug(`[useCoinChart] Loaded cached chart for ${coinId} (${range.value}d)`);
 
     const prices = cached.prices.map((item: [number, number]): PricePoint => ({
       x: new Date(item[0]),
@@ -36,8 +42,12 @@ export function useCoinChart(coinId: string) {
   }
 
   async function refreshChartIfNeeded() {
-    if (!chartStore.shouldRefresh(coinId, range.value)) return;
+    if (!chartStore.shouldRefresh(coinId, range.value)) {
+      logger.debug(`[useCoinChart] No refresh needed for ${coinId} (${range.value}d)`);
+      return;
+    }
 
+    logger.info(`[useCoinChart] Refreshing chart for ${coinId} (${range.value}d)`);
     loading.value = true;
     try {
       const fresh = await chartStore.refreshCoinChart(coinId, range.value);
@@ -57,7 +67,7 @@ export function useCoinChart(coinId: string) {
         }]
       };
     } catch (err) {
-      console.error('Chart refresh error:', err);
+      logger.error('[useCoinChart] Chart refresh error:', err);
     } finally {
       loading.value = false;
     }
