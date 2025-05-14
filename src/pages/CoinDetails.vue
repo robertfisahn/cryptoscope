@@ -1,9 +1,9 @@
 <template>
   <q-page class="q-pa-md">
-    <div v-if="loadingCoin">
-      <q-spinner color="primary" size="2em" class="q-mb-md" />
-      Loading...
-    </div>
+    <div v-if="loadingCoin && !coin">
+  <q-spinner color="primary" size="2em" class="q-mb-md" />
+  Loading...
+</div>
 
     <div v-else-if="coin">
       <h2 class="text-h5">{{ coin.name }} ({{ coin.symbol.toUpperCase() }})</h2>
@@ -28,7 +28,7 @@
           />
         </q-btn-group>
 
-        <div v-if="loadingChart" class="q-mt-md">
+        <div v-if="loadingChart && !chartData" class="q-mt-md">
           <q-spinner size="2em" color="primary" />
         </div>
         <LineChart v-else-if="chartData" :chart-data="chartData" class="q-mt-md" />
