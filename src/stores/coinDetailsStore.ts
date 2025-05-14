@@ -4,33 +4,32 @@ import type { CoinDetails } from 'src/models/CoinDetails';
 import { reactive } from 'vue';
 
 export const useCoinDetailsStore = defineStore('coinDetails', () => {
-    const coinDetails = reactive<Record<string, { data: CoinDetails; lastUpdated: number; lastAccessed: number }>> ({});
+    const coinDetails = reactive<Record<string, { data: CoinDetails; lastUpdated: number}>> ({});
 
-    async function fetchCoinDetails(id: string) {
-      const now = Date.now();
+    function getCachedCoin(id: string): CoinDetails | null {
       const cached = coinDetails[id];
-
-      if (cached && loadFromCache(cached.lastUpdated)) {
-        cached.lastAccessed = now;
-        console.log(`[CoinDetailsStore] Using cached details for ${id}`);
-        return cached.data;
-      }
+      if (!cached) return null;
+      console.log(`[CoinDetailsStore] Using cached data details for ${id}`);
+      return cached.data;
+    }
+    
+    function shouldRefresh(id: string): boolean {
+      const cached = coinDetails[id];
+      if (!cached) return true;
+      return Date.now() - cached.lastUpdated > 2 * 60 * 1000;
+    }
+    
+    async function refreshCoinDetails(id: string): Promise<CoinDetails> {
+      const now = Date.now();
       const res = await coinApi.getCoinDetails(id);
-      
-      console.log('[CoinDetailsStore] Fetching new data from API...');
-
+    
       coinDetails[id] = {
         data: res.data,
-        lastUpdated: now,
-        lastAccessed: now
+        lastUpdated: now
       };
       return res.data;
     }
 
-    function loadFromCache(lastUpdated: number): boolean {
-      return Date.now() - lastUpdated < 2 * 60 * 1000;
-    }
-
-    return { coinDetails, fetchCoinDetails }
+    return { coinDetails, getCachedCoin, shouldRefresh, refreshCoinDetails }
   }
 );

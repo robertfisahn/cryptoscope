@@ -8,20 +8,32 @@ export function useCoinDetails(id: string) {
   const loading = ref(false);
   const error = ref<string | null>(null);
 
-  async function fetchCoinDetails() {
-    if (!id) return;
+  function loadCached() {
+    const cached = store.getCachedCoin(id);
+    if (cached) {
+      coin.value = cached;
+    }
+  }
+
+  async function refreshIfNeeded() {
+    if (!store.shouldRefresh(id)) return;
+
     loading.value = true;
     error.value = null;
     try {
-      coin.value = await store.fetchCoinDetails(id);
+      const fresh = await store.refreshCoinDetails(id);
+      coin.value = fresh;
     } catch {
-      error.value = 'Failed to load coin details';
+      error.value = 'Failed to refresh coin details';
     } finally {
       loading.value = false;
-    }    
+    }
   }
 
-  onMounted(fetchCoinDetails);
+  onMounted(() => {
+    loadCached();
+    void refreshIfNeeded();
+  });
 
-  return { coin, loading, error, fetchCoinDetails };
+  return { coin, loading, error };
 }

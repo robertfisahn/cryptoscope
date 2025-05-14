@@ -15,14 +15,34 @@ export function useCoinChart(coinId: string) {
   const loading = ref(false);
   const range = ref<TimeRange>(DEFAULT_TIME_RANGE);
 
-  const fetchChart = async () => {
-    if (!coinId) return;
-    loading.value = true;
+  function loadCachedChart() {
+    const cached = chartStore.getCachedChart(coinId, range.value);
+    if (!cached) return;
 
+    const prices = cached.prices.map((item: [number, number]): PricePoint => ({
+      x: new Date(item[0]),
+      y: item[1]
+    }));
+
+    chartData.value = {
+      labels: prices.map((p) => p.x.toLocaleDateString()),
+      datasets: [{
+        label: 'Price (USD)',
+        data: prices.map((p) => p.y),
+        borderColor: 'blue',
+        fill: false
+      }]
+    };
+  }
+
+  async function refreshChartIfNeeded() {
+    if (!chartStore.shouldRefresh(coinId, range.value)) return;
+
+    loading.value = true;
     try {
-      const rawData = await chartStore.fetchCoinChart(coinId, range.value);
-      
-      const prices = rawData.prices.map((item: [number, number]): PricePoint => ({
+      const fresh = await chartStore.refreshCoinChart(coinId, range.value);
+
+      const prices = fresh.prices.map((item: [number, number]): PricePoint => ({
         x: new Date(item[0]),
         y: item[1]
       }));
@@ -37,13 +57,16 @@ export function useCoinChart(coinId: string) {
         }]
       };
     } catch (err) {
-      console.error('Chart error:', err);
+      console.error('Chart refresh error:', err);
     } finally {
       loading.value = false;
     }
-  };
+  }
 
-  watch(range, fetchChart, { immediate: true });
+  watch(range, () => {
+    loadCachedChart(); 
+    void refreshChartIfNeeded();
+  }, { immediate: true });
 
   return { chartData, loading, range };
 }
