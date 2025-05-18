@@ -47,6 +47,8 @@ import LineChart from 'src/components/LineChart.vue';
 import { useCoinChart } from 'src/composables/useCoinChart';
 import { useCoinDetails } from 'src/composables/useCoinDetails';
 import { TIME_RANGE_LABELS } from 'src/models/TimeRange';
+import { onUnmounted } from 'vue';
+import { cancelRequestsByKey } from 'src/utils/queue';
 
 const route = useRoute();
 const id = route.params.id as string;
@@ -54,6 +56,11 @@ const id = route.params.id as string;
 const { coin, loading: loadingCoin } = useCoinDetails(id);
 
 const { chartData, loading: loadingChart, range } = useCoinChart(id);
+
+onUnmounted(() => {
+  cancelRequestsByKey(`CoinDetailsStore::${id}`);
+  cancelRequestsByKey(`CoinChartStore::${id}`);
+})
 
 </script>
 
