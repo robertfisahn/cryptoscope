@@ -12,6 +12,7 @@ export const useCoinListStore = defineStore('coinList', () => {
   const loading = ref(false);
   const error = ref<string | null>(null);
   const refreshInterval = ref<number | null>(null);
+  const autoRefreshMs = ref<number | null>(null);
 
   async function fetchCoins(force = false) {
     if (loadFromCache() && !force) {
@@ -56,13 +57,28 @@ export const useCoinListStore = defineStore('coinList', () => {
   }
 
   function startAutoRefresh(intervalMs: number) {
-    if (refreshInterval.value) return;
-
+    stopAutoRefresh();
+    autoRefreshMs.value = intervalMs;
     refreshInterval.value = window.setInterval(() => {
       void fetchCoins(true);
     }, intervalMs);
 
     logger.debug('[CoinListStore] Auto refresh started');
+  }
+
+  function stopAutoRefresh() {
+    if (refreshInterval.value) {
+      clearInterval(refreshInterval.value);
+      refreshInterval.value = null;
+      logger.debug('[CoinListStore] Auto refresh stopped');
+    }
+  }
+
+  function restartAutoRefreshIfSet() {
+    if (autoRefreshMs.value) {
+      logger.debug('[CoinListStore] Restarting auto-refresh');
+      startAutoRefresh(autoRefreshMs.value);
+    }
   }
 
   return {
@@ -72,6 +88,8 @@ export const useCoinListStore = defineStore('coinList', () => {
     error,
     refreshInterval,
     fetchCoins,
-    startAutoRefresh
+    startAutoRefresh,
+    stopAutoRefresh,
+    restartAutoRefreshIfSet
   };
 });

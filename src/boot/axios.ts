@@ -23,10 +23,7 @@ api.interceptors.response.use(response => {
   const url = error.config?.url;
   const status = error.response?.status;
 
-  if (!navigator.onLine) {
-    logger.network('[API] Offline – user has no internet connection');
-    Notify.create({ type: 'warning', message: 'You are offline – working in offline mode' });
-  } else if (!error.response) {
+  if (!error.response) {
     logger.error('[API] No response from server (timeout?) for', url);
     Notify.create({ type: 'negative', message: 'No response from server. Please try again.' });
   } else {

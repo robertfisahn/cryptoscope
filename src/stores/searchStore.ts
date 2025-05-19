@@ -11,6 +11,7 @@ export const useSearchStore = defineStore('search', () => {
   const loading = ref(false);
   const lastUpdated = ref<number | null>(null);
   const refreshInterval = ref<number | null>(null);
+  const autoRefreshMs = ref<number | null>(null);
 
   async function fetchSearchCoins(force = false) {
     if (loadFromCache() && !force) {
@@ -50,12 +51,29 @@ export const useSearchStore = defineStore('search', () => {
   }
 
   function startAutoRefresh(intervalMs: number) {
-    if (refreshInterval.value) return;
+    stopAutoRefresh();
+
+    autoRefreshMs.value = intervalMs;
     refreshInterval.value = window.setInterval(() => {
       void fetchSearchCoins(true);
     }, intervalMs);
 
     logger.debug('[SearchStore] Auto refresh started');
+  }
+
+  function stopAutoRefresh() {
+    if (refreshInterval.value) {
+      clearInterval(refreshInterval.value);
+      refreshInterval.value = null;
+      logger.debug('[SearchStore] Auto refresh stopped');
+    }
+  }
+
+  function restartAutoRefreshIfSet() {
+    if (autoRefreshMs.value) {
+      logger.debug('[SearchStore] Restarting auto-refresh');
+      startAutoRefresh(autoRefreshMs.value);
+    }
   }
 
   return {
@@ -64,6 +82,8 @@ export const useSearchStore = defineStore('search', () => {
     lastUpdated,
     refreshInterval,
     fetchSearchCoins,
-    startAutoRefresh
+    startAutoRefresh,
+    stopAutoRefresh,
+    restartAutoRefreshIfSet
   };
 });

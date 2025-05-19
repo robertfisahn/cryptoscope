@@ -3,22 +3,37 @@ import type { Task } from 'src/models/Task';
 import type { QueueOptions } from 'src/models/QueueOptions'
 
 const taskQueue: Task<unknown>[] = [];
-const INTERVAL_MS = 10000;
+const INTERVAL_MS = 2000;
 const activeTaskIds = new Set<string>();
 
 function startQueueProcessor() {
   setInterval(() => {
     void (async () => {
+      if (isPaused) {
+        logger.debug('[Queue] Skipping processing – queue is paused');
+        return;
+      }
+      
       if (taskQueue.length === 0) return;
 
       const task = taskQueue.shift();
       if (!task) return;
 
+      if (!navigator.onLine) {
+        logger.warn(`[Queue] App is offline – requeueing task: ${task.label}`);
+        taskQueue.unshift(task);
+        return;
+      }
       try {
         const result = await task.run();
         logger.info(`[Queue] ✅ Task completed: ${task.label}`);
         task.resolve(result);
       } catch (err) {
+        if (!navigator.onLine) {
+            logger.warn(`[Queue] App is offline – requeueing task: ${task.label}`);
+            taskQueue.unshift(task);
+            return;
+        }
         logger.error(`[Queue] ❌ Task failed: ${task.label}`, err);
         task.reject(err);
       }
@@ -102,4 +117,16 @@ export function cancelRequestsByKey(key: string) {
   if (removed > 0) {
     logger.debug(`[Queue] Removed ${removed} task(s) with cancelKey: ${key}`);
   }
+}
+
+let isPaused = false;
+
+export function pauseQueue() {
+  isPaused = true;
+  logger.warn('[Queue] ⏸️ Queue paused');
+}
+
+export function resumeQueue() {
+  isPaused = false;
+  logger.warn('[Queue] ▶️ Queue resumed');
 }
