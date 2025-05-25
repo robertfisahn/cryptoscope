@@ -1,7 +1,7 @@
 import { boot } from 'quasar/wrappers';
 import axios from 'axios';
-import { Notify } from 'quasar';
 import { logger } from 'src/utils/logger';
+import { handleApiError } from 'src/handlers/errors/handleApiError';
 
 const api = axios.create({
   baseURL: 'https://api.coingecko.com/api/v3',
@@ -20,18 +20,8 @@ api.interceptors.response.use(response => {
   logger.debug('[API] Response:', response.config.url, response.status);
   return response;
 }, error => {
-  const url = error.config?.url;
-  const status = error.response?.status;
-
-  if (!error.response) {
-    logger.error('[API] No response from server (timeout?) for', url);
-    Notify.create({ type: 'negative', message: 'No response from server. Please try again.' });
-  } else {
-    logger.error(`[API] Error ${status} on ${url}:`, error.message);
-    Notify.create({ type: 'negative', message: `Error ${status}: ${error.message}` });
-  }
-
-  return Promise.reject(error instanceof Error ? error : new Error(String(error)));
+  const apiError = handleApiError(error);
+  return Promise.reject(apiError);
 });
 
 export default boot(({ app }) => {
