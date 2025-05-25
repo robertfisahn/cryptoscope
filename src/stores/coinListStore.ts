@@ -76,7 +76,6 @@ export const useCoinListStore = defineStore('coinList', () => {
 
   function restartAutoRefreshIfSet() {
     if (autoRefreshMs.value) {
-      logger.debug('[CoinListStore] Restarting auto-refresh');
       startAutoRefresh(autoRefreshMs.value);
     }
   }

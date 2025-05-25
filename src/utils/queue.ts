@@ -1,6 +1,7 @@
 import { logger } from 'src/utils/logger';
 import type { Task } from 'src/models/Task';
 import type { QueueOptions } from 'src/models/QueueOptions'
+import { handleQueueError } from 'src/handlers/errors/handleQueueError';
 
 const taskQueue: Task<unknown>[] = [];
 const INTERVAL_MS = 2000;
@@ -29,11 +30,7 @@ function startQueueProcessor() {
         logger.info(`[Queue] ✅ Task completed: ${task.label}`);
         task.resolve(result);
       } catch (err) {
-        if (!navigator.onLine) {
-            logger.warn(`[Queue] App is offline – requeueing task: ${task.label}`);
-            taskQueue.unshift(task);
-            return;
-        }
+        handleQueueError(err, task, (t) => taskQueue.unshift(t));
         logger.error(`[Queue] ❌ Task failed: ${task.label}`, err);
         task.reject(err);
       }
